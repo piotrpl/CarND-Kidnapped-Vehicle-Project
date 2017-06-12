@@ -86,10 +86,10 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
   //   implement this method and use it as a helper during the updateWeights phase.
 
   for (int i = 0; i < observations.size(); i++) {
-    double min_dist = INFINITY;
+    double min_dist = -1;
     for (int j = 0; j < predicted.size(); j++) {
       double current_dist = dist(predicted.at(j).x, predicted.at(j).y, observations.at(i).x, observations.at(i).y);
-      if (current_dist < min_dist) {
+      if (min_dist == -1 || current_dist < min_dist) {
         min_dist = current_dist;
         observations.at(i).id = predicted.at(j).id;
       }
@@ -111,7 +111,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   //   http://planning.cs.uiuc.edu/node99.html
 
   for (int i = 0; i < particles.size(); i++) {
-    std::vector<LandmarkObs> predicted;
+    std::vector<LandmarkObs> predicted_landmarks;
     std::vector<LandmarkObs> transformed_observations;
 
     for (auto observation: observations) {
@@ -127,15 +127,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         landmarkObs.id = landmark.id_i;
         landmarkObs.x = landmark.x_f;
         landmarkObs.y = landmark.y_f;
-        predicted.push_back(landmarkObs);
+        predicted_landmarks.push_back(landmarkObs);
       }
     }
 
-    dataAssociation(predicted, transformed_observations);
+    dataAssociation(predicted_landmarks, transformed_observations);
     particles.at(i).weight = 1;
 
     for (auto transformed_obs: transformed_observations) {
-      for (auto landmark: predicted) {
+      for (auto landmark: predicted_landmarks) {
         if (landmark.id == transformed_obs.id) {
           double delta_x = landmark.x - transformed_obs.x;
           double delta_y = landmark.y - transformed_obs.y;
